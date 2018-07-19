@@ -648,6 +648,7 @@ export const stakePoolListingEnabled = compose(
   l => l.indexOf(EXTERNALREQUEST_STAKEPOOL_LISTING) > -1,
   allowedExternalRequests
 );
+export const spvMode = get([ "settings", "currentSettings", "spvMode" ]);
 
 export const isSigningMessage = get([ "grpc", "getSignMessageRequestAttempt" ]);
 export const signMessageError = get([ "grpc", "getSignMessageError" ]);
@@ -820,6 +821,21 @@ export const daemonStopped = get([ "daemon", "daemonStopped" ]);
 
 export const chainParams = compose(isTestNet => isTestNet ? TestNetParams : MainNetParams, isTestNet);
 
+export const blocksPassedOnTicketInterval = createSelector(
+  [ chainParams, currentBlockHeight ],
+  (chainParams, currentBlockHeight) => {
+    if(!chainParams || !currentBlockHeight) return 0;
+    const { WorkDiffWindowSize } = chainParams;
+    return currentBlockHeight % WorkDiffWindowSize;
+  }
+);
+
+export const blocksNumberToNextTicket = createSelector(
+  [ blocksPassedOnTicketInterval, chainParams ],
+  (chainParams, blocksPassedOnTicketInterval) =>
+    chainParams.WorkDiffWindowSize - blocksPassedOnTicketInterval
+);
+
 export const exportingData = get([ "control", "exportingData" ]);
 
 export const location = get([ "routing", "location" ]);
@@ -879,3 +895,10 @@ export const stakeRewardsStats = createSelector(
   })));
 
 export const modalVisible = get([ "control", "modalVisible" ]);
+
+// Functionalities deactivated
+export const isSignVerifyMessageDisabled = or(isWatchingOnly, isWatchOnly);
+
+export const isCreateAccountDisabled = or(isWatchingOnly, isWatchOnly);
+
+export const isChangePassPhraseDisabled = or(isWatchingOnly, isWatchOnly);
